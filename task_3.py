@@ -1,5 +1,4 @@
-import networkx as nx
-import matplotlib.pyplot as plt
+import heapq
 
 edges = [
     ("Heroiv Pratsi", "Studentska", 3),
@@ -22,25 +21,43 @@ edges = [
     ("Armiiska", "Akademika Pavlova", 3)
 ]
 
-G = nx.Graph()
+graph = {}
 for u, v, w in edges:
-    G.add_edge(u, v, weight=w)
+    if u not in graph:
+        graph[u] = []
+    if v not in graph:
+        graph[v] = []
+    graph[u].append((v, w))
+    graph[v].append((u, w))
 
-pos = nx.spring_layout(G)
-labels = nx.get_edge_attributes(G, 'weight')
-nx.draw(G, pos, with_labels=True, node_size=700, node_color='lightblue', font_size=10, font_weight='bold')
-nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
-plt.show()
+def dijkstra(graph, start):
 
-def dijkstra_all_pairs(graph):
-    shortest_paths = dict(nx.all_pairs_dijkstra_path(graph))
-    shortest_lengths = dict(nx.all_pairs_dijkstra_path_length(graph))
-    return shortest_paths, shortest_lengths
+    distances = {node: float('inf') for node in graph}
+    distances[start] = 0
+    priority_queue = [(0, start)]
+    
+    while priority_queue:
+        current_distance, current_node = heapq.heappop(priority_queue)
+        
 
-shortest_paths, shortest_lengths = dijkstra_all_pairs(G)
+        if current_distance > distances[current_node]:
+            continue
+        
+        for neighbor, weight in graph[current_node]:
+            distance = current_distance + weight
+            
+           
+            if distance < distances[neighbor]:
+                distances[neighbor] = distance
+                heapq.heappush(priority_queue, (distance, neighbor))
+    
+    return distances
 
-source = "Naukova"
-print(f"Shortest paths from {source}:")
-for target in G.nodes():
-    if target != source:
-        print(f"To {target}: Path: {shortest_paths[source][target]}, Length: {shortest_lengths[source][target]}")
+
+start_node = "Naukova"
+shortest_paths = dijkstra(graph, start_node)
+
+
+print(f"Shortest paths from {start_node}:")
+for destination in shortest_paths:
+    print(f"To {destination}: {shortest_paths[destination]}")
